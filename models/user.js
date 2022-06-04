@@ -12,7 +12,12 @@ User.init({
   username: {
     type: DataTypes.TEXT,
     unique: true,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      isEmail: {
+        msg: 'Valdidation isEmail on username failed'
+      },
+    }
   },
   name: {
     type: DataTypes.TEXT,

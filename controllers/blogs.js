@@ -10,8 +10,8 @@ const blogFinder = async (req, res, next) => {
 
 const tokenExtractor = (req, res, next) => {
   const authorization = req.get('authorization')
-  if (authorization && authorization.toLowerCafe().startsWith('bearer ')) {
-    try {
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    try {   
       req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
     } catch {
       res.status(401).json({ error: 'token invalid' })
@@ -19,6 +19,7 @@ const tokenExtractor = (req, res, next) => {
   } else {
     res.status(401).json({ error: 'token missing' })
   }
+  next()
 }
 
 router.get('/', async (req, res) => {
@@ -41,8 +42,9 @@ router.get('/:id', blogFinder, async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', tokenExtractor, async (req, res) => {
   const user = await User.findByPk(req.decodedToken.id)
+
   const blog = await Blog.create({ ...req.body, userId: user.id })
   res.json(blog)
 })
@@ -53,9 +55,13 @@ router.put('/:id', blogFinder, async (req, res) => {
   res.json(req.blog)
 })
 
-router.delete('/:id', blogFinder, async (req, res) => {
-  await req.blog.destroy() 
-  res.status(204).end()
+router.delete('/:id', blogFinder, tokenExtractor, async (req, res) => {
+  if (req.blog.id === req.decodedToken.id) {
+    await req.blog.destroy() 
+    res.status(204).end()
+  } else {
+    res.status(404).json({ 'error': 'unauthorized'})
+  }
 })
 
 module.exports = router

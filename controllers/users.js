@@ -1,6 +1,22 @@
-const bcrypt = require('bcrypt')
 const router = require('express').Router()
+const bcrypt = require('bcrypt')
 const { User, Blog } = require('../models')
+const { SECRET } = require('../utils/config')
+
+const tokenExtractor = (req, res, next) => {
+  const authorization = req.get('authorization')
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    try {
+      req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
+    } catch {
+      res.status(401).json({ error: 'token invalid' })
+    }
+  } else {
+    res.status(401).json({ error: 'token missing' })
+  }
+  next()
+}  
+
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
@@ -14,8 +30,6 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const { username, name, password } = req.body
-  
-
   const saltRounds = 10
   const passwordHash = await bcrypt.hash(password, saltRounds)
   const userToCreate = {
@@ -27,15 +41,22 @@ router.post('/', async (req, res) => {
   res.status(201).json(user)
 })
 
-router.put('/:username', async (req, res) => {
-  const user = await User.findOne({
-    where: {
-      'username': req.params.username 
-    },
-  })
-  user.username = req.body.username
-  user.save()
-  res.json(user)
+router.put('/:username', tokenExtractor, async (req, res) => {
+  if (req.params.username === req.decodedToken) {
+    await User.update(
+      { 'username': req.body.username},
+      { 
+        where: {
+          'username': req.params.username 
+      },
+    })
+    const user = await User.findOne({ 
+        where: {
+          'username': req.params.username 
+      }
+    })
+    res.json(user)
+  }
 })
 
 module.exports = router

@@ -5,7 +5,7 @@ const unknownEndpoint = (req, res) => {
 const errorHandler = (error, req, res, next) => {
   if (error.name === 'TypeError') {
     return res.status(400).send({ error: 'Malformatted id' })
-  } else if ((error.name === 'SequelizeValidationError')) {
+  } else if ((error.name === 'SequelizeValidationError') || (error.name === 'SequelizeUniqueConstraintError') ) {
     return res.status(400).json({ error })
   }
   next(error)
