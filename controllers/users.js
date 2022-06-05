@@ -20,6 +20,7 @@ const tokenExtractor = (req, res, next) => {
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
+    attributes: { exclude: ['id', 'passwordHash'] },
     include: {
       model: Blog,
       attributes: { exclude: ['userId'] }
@@ -42,7 +43,7 @@ router.post('/', async (req, res) => {
 })
 
 router.put('/:username', tokenExtractor, async (req, res) => {
-  if (req.params.username === req.decodedToken) {
+  if (req.params.username === req.decodedToken.username) {
     await User.update(
       { 'username': req.body.username},
       { 
@@ -50,12 +51,19 @@ router.put('/:username', tokenExtractor, async (req, res) => {
           'username': req.params.username 
       },
     })
-    const user = await User.findOne({ 
-        where: {
-          'username': req.params.username 
+    const user = await User.findOne({
+      attributes: { exclude: ['id', 'passwordHash'] },
+      include: {
+        model: Blog,
+        attributes: { exclude: ['userId'] }
+      },
+      where: {
+        'username': req.params.username 
       }
     })
     res.json(user)
+  } else {
+    res.status(404).json({ 'error': 'unauthorized'})
   }
 })
 
