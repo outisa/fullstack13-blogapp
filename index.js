@@ -6,14 +6,16 @@ const middleware = require('./utils/middleware')
 
 const { PORT } = require('./utils/config')
 const { connectToDatabase } = require('./utils/db')
-const blogsrouter = require('./controllers/blogs')
+const blogsRouter = require('./controllers/blogs')
 const userRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
+const authorsRouter = require('./controllers/author')
 
 app.use(express.json())
-app.use('/api/blogs', blogsrouter)
+app.use('/api/blogs', blogsRouter)
 app.use('/api/users', userRouter)
 app.use('/api/login', loginRouter)
+app.use('/api/authors', authorsRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
