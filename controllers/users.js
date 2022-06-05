@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken')
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const { User, Blog } = require('../models')
@@ -6,7 +7,7 @@ const { SECRET } = require('../utils/config')
 const tokenExtractor = (req, res, next) => {
   const authorization = req.get('authorization')
   if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    try {
+    try {   
       req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
     } catch {
       res.status(401).json({ error: 'token invalid' })
@@ -15,8 +16,7 @@ const tokenExtractor = (req, res, next) => {
     res.status(401).json({ error: 'token missing' })
   }
   next()
-}  
-
+}
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
@@ -43,25 +43,16 @@ router.post('/', async (req, res) => {
 })
 
 router.put('/:username', tokenExtractor, async (req, res) => {
-  if (req.params.username === req.decodedToken.username) {
-    await User.update(
-      { 'username': req.body.username},
-      { 
-        where: {
-          'username': req.params.username 
-      },
-    })
-    const user = await User.findOne({
-      attributes: { exclude: ['id', 'passwordHash'] },
-      include: {
-        model: Blog,
-        attributes: { exclude: ['userId'] }
-      },
-      where: {
-        'username': req.params.username 
-      }
-    })
-    res.json(user)
+  let userToUpdate = await User.findOne({
+    attributes: { exclude: ['passwordHash'] },
+    where: {
+      'username': req.params.username 
+    }
+  })
+  if ( userToUpdate.id === req.decodedToken.id) {
+    userToUpdate.username = req.body.username
+    userToUpdate.save()
+    res.json(userToUpdate)
   } else {
     res.status(404).json({ 'error': 'unauthorized'})
   }

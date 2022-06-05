@@ -3,6 +3,7 @@ const router = require('express').Router()
 const { Op } = require('sequelize')
 const { Blog, User } = require('../models') 
 const { SECRET } = require('../utils/config')
+
 const blogFinder = async (req, res, next) => {
   req.blog = await Blog.findByPk(req.params.id)
   next()
@@ -24,7 +25,7 @@ const tokenExtractor = (req, res, next) => {
 
 router.get('/', async (req, res) => {
   let where = {}
-  console.log(req.query.search)
+
   if (req.query.search) {
     where = {
       [Op.or]: [ 
@@ -52,7 +53,7 @@ router.get('/', async (req, res) => {
       ['likes', 'DESC'],
     ]
   })
-  console.log(JSON.stringify(blogs, null, 2))
+  
   res.json(blogs)
 })
 
