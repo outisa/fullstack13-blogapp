@@ -21,7 +21,7 @@ module.exports = {
       },
       likes: {
         type: DataTypes.INTEGER,
-        default: 0
+        defaultValue: 0
       },
     })
     await queryInterface.createTable('users', {

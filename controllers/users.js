@@ -1,22 +1,8 @@
-const jwt = require('jsonwebtoken')
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
-const { User, Blog } = require('../models')
-const { SECRET } = require('../utils/config')
-
-const tokenExtractor = (req, res, next) => {
-  const authorization = req.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    try {   
-      req.decodedToken = jwt.verify(authorization.substring(7), SECRET)
-    } catch {
-      res.status(401).json({ error: 'token invalid' })
-    }
-  } else {
-    res.status(401).json({ error: 'token missing' })
-  }
-  next()
-}
+const { Op } = require('sequelize')
+const { User, Blog  } = require('../models')
+const { tokenExtractor } = require('../utils/authorization')
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
@@ -27,6 +13,38 @@ router.get('/', async (req, res) => {
     }
   })
   res.json(users)
+})
+
+router.get('/:id', async (req, res) => {
+  let where = {}
+  if (req.query.read && req.query.read === 'true') {
+    where = {
+      [Op.and]: [{ read: true }, { userId: req.params.id }]
+    }
+  } else if (req.query.read && req.query.read === 'false')  {
+    where = {
+      [Op.and]: [{ read: false }, { userId: req.params.id }]
+    } 
+  }
+
+  const user = await User.findByPk(req.params.id, {
+    attributes: { exclude: ['passwordHash', 'createdAt', 'updatedAt'] },
+    include: [
+    {
+      model: Blog,
+      as: 'readings',
+      attributes: { exclude: ['userId', 'createdAt', 'updatedAt'] },      
+      through: {
+        attributes: ['id','read'],
+        where
+      }
+    }]
+  })
+  if (user) {
+    res.json(user)
+  } else {
+    res.status(404).end()
+  }
 })
 
 router.post('/', async (req, res) => {
