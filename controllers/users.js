@@ -39,7 +39,11 @@ router.post('/', async (req, res) => {
     passwordHash
   }
   const user = await User.create(userToCreate)
-  res.status(201).json(user)
+  // We do not want to return passwordHash
+  const createdUser = {
+    'username' : user.username,
+  }
+  res.status(201).json(createdUser)
 })
 
 router.put('/:username', tokenExtractor, async (req, res) => {
