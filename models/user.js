@@ -19,6 +19,10 @@ User.init({
       },
     }
   },
+  disabled: {
+    type: DataTypes.BOOLEAN,
+    default: false,
+  },
   name: {
     type: DataTypes.TEXT,
     allowNull: false

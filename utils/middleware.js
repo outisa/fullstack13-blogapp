@@ -7,7 +7,9 @@ const errorHandler = (error, req, res, next) => {
     return res.status(400).send({ error: `Malformatted id or ${error}` })
   } else if ((error.name === 'SequelizeValidationError') || (error.name === 'SequelizeUniqueConstraintError') ) {
     return res.status(400).json({ error })
-  }
+  } else if (error.name === 'SequelizeDatabaseError') {
+    return res.status(400).json({ error })
+  }  
   next(error)
 }
 

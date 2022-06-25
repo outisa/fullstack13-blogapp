@@ -2,7 +2,7 @@ const router = require('express').Router()
 const bcrypt = require('bcrypt')
 const { Op } = require('sequelize')
 const { User, Blog  } = require('../models')
-const { tokenExtractor } = require('../utils/authorization')
+const { tokenExtractor, activeSessionChecker } = require('../utils/authorization')
 
 router.get('/', async (req, res) => {
   const users = await User.findAll({
@@ -64,14 +64,15 @@ router.post('/', async (req, res) => {
   res.status(201).json(createdUser)
 })
 
-router.put('/:username', tokenExtractor, async (req, res) => {
+router.put('/:username', tokenExtractor, activeSessionChecker, async (req, res) => {
   let userToUpdate = await User.findOne({
     attributes: { exclude: ['passwordHash'] },
     where: {
       'username': req.params.username 
     }
   })
-  if ( userToUpdate.id === req.decodedToken.id) {
+
+  if ((userToUpdate.id === req.decodedToken.id) && req.session) {
     userToUpdate.username = req.body.username
     userToUpdate.save()
     res.json(userToUpdate)

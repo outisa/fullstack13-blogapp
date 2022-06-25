@@ -10,6 +10,7 @@ const blogsRouter = require('./controllers/blogs')
 const userRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const authorsRouter = require('./controllers/author')
+const logoutRouter = require('./controllers/logout')
 const readingListRouter = require('./controllers/readingList')
 
 app.use(express.json())
@@ -18,10 +19,10 @@ app.use('/api/users', userRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/authors', authorsRouter)
 app.use('/api/readinglists', readingListRouter)
+app.use('/api/logout', logoutRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
-
 
 const start = async () => {
   await connectToDatabase()
