@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', tokenExtractor, activeSessionChecker,  async (req, res) => {
   let blogListToUpdate = await ReadingList.findByPk(req.params.id)
 
-  if ((blogListToUpdate.userId=== req.decodedToken.id) & req.session) {
+  if ((blogListToUpdate.userId === req.decodedToken.id) && req.session) {
     blogListToUpdate.read = req.body.read
     blogListToUpdate.save()
     res.status(200).json(blogListToUpdate)
